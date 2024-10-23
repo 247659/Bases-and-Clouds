@@ -1,5 +1,4 @@
 WITH RECURSIVE hierarchy AS (
-    -- Poziom 0: Diana Lorentz
     SELECT 0 AS employee_level,
            e.first_name,
            e.last_name,
@@ -10,7 +9,6 @@ WITH RECURSIVE hierarchy AS (
     
     UNION ALL
     
-    -- Rekurencyjne dodawanie menedżerów
     SELECT h.employee_level + 1 AS employee_level,
            m.first_name,
            m.last_name,
@@ -21,7 +19,6 @@ WITH RECURSIVE hierarchy AS (
     ON h.manager_id = m.employee_id
 )
 
--- Wyświetlenie wyników
 SELECT employee_level, first_name, last_name
 FROM hierarchy
 ORDER BY employee_level;
