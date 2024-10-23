@@ -8,33 +8,31 @@ create table visitors (
     company VARCHAR(255),
     people_number INT,
     parking BOOLEAN, 
-    enter_datetime TIMESTAMP,
+    enter_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     exit_datetime TIMESTAMP,
     foreign key (employee_id) references employees(employee_id),
     check (exit_datetime > enter_datetime and exit_datetime <= CURRENT_TIMESTAMP)
 );
 
--- SELECT employee_id FROM employees d WHERE d.first_name = 'Daniel' and d.last_name = 'Faviet';
+INSERT INTO visitors (employee_id, company, people_number, parking, enter_datetime, exit_datetime)
+SELECT d.employee_id, 'RSM', 1, TRUE, '2024-10-13 09:00:00', '2024-10-13 10:00:00'
+FROM employees d
+WHERE d.first_name = 'Daniel' AND d.last_name = 'Faviet';
 
 INSERT INTO visitors (employee_id, company, people_number, parking, enter_datetime, exit_datetime)
-VALUES (109, 'RSM', 1, TRUE, '2024-10-13 09:00:00', '2024-10-13 10:00:00');
-
-INSERT INTO visitors (employee_id, company, people_number, parking, enter_datetime, exit_datetime)
-VALUES (109, 'KPMG', 3, FALSE, '2024-10-14 10:00:00', '2024-10-14 11:30:00');
+SELECT d.employee_id, 'KPMG', 3, FALSE, '2024-10-14 10:00:00', '2024-10-14 11:30:00'
+FROM employees d
+WHERE d.first_name = 'Daniel' AND d.last_name = 'Faviet';
 
 ALTER TABLE visitors
 DROP COLUMN parking;
 
--- SELECT * FROM visitors
-
--- SELECT employee_id FROM employees d WHERE d.first_name = 'John' and d.last_name = 'Chen';
-
 UPDATE visitors
-SET employee_id = 110
+SET employee_id = (SELECT employee_id FROM employees d WHERE d.first_name = 'John' and d.last_name = 'Chen')
 WHERE company = 'KPMG';
 
 DELETE FROM visitors
-WHERE employee_id = 109;
+WHERE employee_id = (SELECT employee_id FROM employees d WHERE d.first_name = 'Daniel' and d.last_name = 'Faviet')
 
 DROP TABLE visitors;
 
