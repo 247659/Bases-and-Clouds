@@ -53,16 +53,16 @@ END
 
 
 --dobre wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1000, 'imie1', 'nazwisko1', 'test1', '515.123.1234', '2000-01-01', 'IT_PROG', 11000);
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1000, 'imie1', 'nazwisko1', 'test1', '515.123.1234', '2000-01-01', 'IT_PROG', 11000, NULL, NULL, 60);
 
 --wyzsze wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1001, 'imie2', 'nazwisko2', 'test2', '515.123.1234', '2000-01-01', 'IT_PROG', 25000);
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1001, 'imie2', 'nazwisko2', 'test2', '515.123.1234', '2000-01-01', 'IT_PROG', 25000, NULL, NULL, 60);
 
 --za niskie wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1002, 'imie3', 'nazwisko3', 'test3', '515.123.1234', '2000-01-01', 'IT_PROG', 5000);
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1002, 'imie3', 'nazwisko3', 'test3', '515.123.1234', '2000-01-01', 'IT_PROG', 5000, NULL, NULL, 60);
 
 UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1000;
 UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1001;
