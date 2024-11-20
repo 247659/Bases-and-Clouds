@@ -142,19 +142,10 @@ BEGIN
 
     SELECT @UpdatedCount = COUNT(*) FROM #UpdatedEmployees;
 
-	SELECT DISTINCT employee_id, first_name, last_name, department_name
+	SELECT employee_id, first_name, last_name, department_name
     FROM #UpdatedEmployees;
-	
-    --PRINT 'Zmieniono stanowiska u następujących pracowników:';
-	DECLARE @msg NVARCHAR(MAX) = '';
-	/*
-	SELECT @msg = STRING_AGG('Employee ID: ' + CAST(employee_id AS NVARCHAR(10)) +
-                ', Name: ' + first_name + ' ' + last_name,
-                CHAR(13) + CHAR(10))
-    FROM #UpdatedEmployees
 
-	PRINT @msg;
-	*/
+	DECLARE @msg NVARCHAR(MAX) = '';
 	
     PRINT 'Informacje o departamentach i pracownikach:';
     DECLARE @DepartmentName NVARCHAR(100);
@@ -211,6 +202,8 @@ EXEC changeJobTitle
     @NewJobTitle = 'Sales Representative',
     @Country = 'United Kingdom',
     @UpdatedCount = @UpdatedCount OUTPUT;
+
+PRINT 'Liczba zmodyfikowanych rekordów: ' + CAST(@UpdatedCount AS NVARCHAR(10));
 
 /*
 SELECT e.employee_id, e.first_name, e.last_name, d.department_name
