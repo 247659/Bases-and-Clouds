@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION trigger_employee_job_change()
 RETURNS TRIGGER AS $$
 DECLARE
-    new_min_salary NUMERIC;
-    new_max_salary NUMERIC;
-    current_salary NUMERIC;
+    new_min_salary NUMERIC(6);
+    new_max_salary NUMERIC(6);
+    current_salary NUMERIC(6);
     salary_increase NUMERIC;
 BEGIN
     SELECT min_salary, max_salary INTO new_min_salary, new_max_salary
