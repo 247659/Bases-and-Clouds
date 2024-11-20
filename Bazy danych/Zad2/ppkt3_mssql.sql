@@ -1,4 +1,5 @@
-﻿CREATE OR ALTER FUNCTION func (@input1 NVARCHAR(100), @input2 NVARCHAR(100), @input3 NVARCHAR(100))
+﻿/*
+CREATE OR ALTER FUNCTION func (@input1 NVARCHAR(100), @input2 NVARCHAR(100), @input3 NVARCHAR(100))
 RETURNS INT 
 AS BEGIN
 	DECLARE @employeeCount INT
@@ -68,7 +69,7 @@ BEGIN
 	DEALLOCATE salary_cursor
 END
 GO
-
+*/
 
 CREATE OR ALTER PROCEDURE changeJobTitle
     @CurrentJobTitle NVARCHAR(100),
@@ -87,8 +88,8 @@ BEGIN
         SET @message = CONCAT('Brak kraju ', @Country, '!');
         THROW 50001, @message, 1;
     END;
-
-
+	
+	
     IF NOT EXISTS (
         SELECT 1 
         FROM departments d
@@ -100,7 +101,7 @@ BEGIN
         SET @message = CONCAT('Brak departamentów w kraju ', @Country, '!');
         THROW 50002, @message, 1;
     END;
-
+	
     IF NOT EXISTS (
         SELECT 1 
         FROM employees e
@@ -113,17 +114,11 @@ BEGIN
         SET @message = CONCAT('Brak pracowników zatrudnionych w kraju ', @Country, '!');
         THROW 50003, @message, 1;
     END;
-
+	
     DECLARE @EmployeeCount INT;
     SELECT @EmployeeCount = dbo.func(@CurrentJobTitle, d.department_name, @Country)
     FROM departments d
 	PRINT @EmployeeCount
-
-    IF @EmployeeCount = 0
-    BEGIN
-        PRINT 'Brak pracowników na stanowisku ' + @CurrentJobTitle + ' w kraju ' + @Country + '!';
-        RETURN;
-    END;
 
     CREATE TABLE #UpdatedEmployees (
         employee_id NUMERIC(6, 0),
@@ -141,17 +136,26 @@ BEGIN
     JOIN countries c ON l.country_id = c.country_id
     WHERE j.job_title = @CurrentJobTitle AND c.country_name = @Country;
 
+	UPDATE employees
+    SET job_id = (SELECT job_id FROM jobs WHERE job_title = @NewJobTitle)
+    WHERE employee_id IN (SELECT employee_id FROM #UpdatedEmployees);
+
     SELECT @UpdatedCount = COUNT(*) FROM #UpdatedEmployees;
 
-    PRINT 'Zmieniono stanowiska u następujących pracowników:';
+	SELECT DISTINCT employee_id, first_name, last_name, department_name
+    FROM #UpdatedEmployees;
+	
+    --PRINT 'Zmieniono stanowiska u następujących pracowników:';
 	DECLARE @msg NVARCHAR(MAX) = '';
+	/*
 	SELECT @msg = STRING_AGG('Employee ID: ' + CAST(employee_id AS NVARCHAR(10)) +
                 ', Name: ' + first_name + ' ' + last_name,
                 CHAR(13) + CHAR(10))
     FROM #UpdatedEmployees
 
 	PRINT @msg;
-
+	*/
+	
     PRINT 'Informacje o departamentach i pracownikach:';
     DECLARE @DepartmentName NVARCHAR(100);
     DECLARE departmentCursor CURSOR FOR
@@ -194,7 +198,7 @@ BEGIN
 
     CLOSE departmentCursor;
     DEALLOCATE departmentCursor;
-
+	
 	SELECT * FROM #UpdatedEmployees
     DROP TABLE #UpdatedEmployees;
 END
@@ -208,4 +212,27 @@ EXEC changeJobTitle
     @Country = 'United Kingdom',
     @UpdatedCount = @UpdatedCount OUTPUT;
 
-
+/*
+SELECT e.employee_id, e.first_name, e.last_name, d.department_name
+FROM employees e
+JOIN departments d on d.department_id = e.department_id
+JOIN jobs j on j.job_id = e.job_id
+join locations l on l.location_id = d.location_id
+join countries c on c.country_id = l.country_id
+WHERE j.job_title = 'Sales Representative' and c.country_name = 'United Kingdom';
+*/
+/*
+UPDATE employees
+SET job_id = 'SA_MAN' -- Podaj nowy job_id, np. 'SALES'
+WHERE employee_id BETWEEN 145 AND 149;
+--1700
+UPDATE departments
+SET location_id = 2200
+WHERE department_id = 120;
+*/
+/*
+SELECT d.department_id, d.department_name
+FROM departments d
+LEFT JOIN employees e ON d.department_id = e.department_id
+WHERE e.department_id IS NULL;
+*/
