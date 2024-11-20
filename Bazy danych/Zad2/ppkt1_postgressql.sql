@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION count_employees(
-    job_title_fun VARCHAR,
-    department_name_fun VARCHAR,
-    country_name_fun VARCHAR
+    job_title_fun VARCHAR(35),
+    department_name_fun VARCHAR(30),
+    country_name_fun VARCHAR(40)
 ) RETURNS INTEGER AS $$
 BEGIN
     RETURN (
