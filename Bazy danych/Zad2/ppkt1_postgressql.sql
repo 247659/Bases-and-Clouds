@@ -20,14 +20,3 @@ $$ LANGUAGE plpgsql;
 
 SELECT count_employees('Sales Manager', 'Sales', 'United Kingdom');
 
-/*
-SELECT * FROM employees e
-JOIN jobs j ON e.job_id = j.job_id
-JOIN departments d ON e.department_id = d.department_id
-JOIN locations l ON d.location_id = l.location_id
-JOIN countries c ON l.country_id = c.country_id
-WHERE j.job_title = 'Sales Manager'
-  AND d.department_name = 'Sales'
-  AND c.country_name = 'United Kingdom';
-  */
-

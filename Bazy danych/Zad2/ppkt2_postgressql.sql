@@ -42,35 +42,28 @@ WHEN (OLD.job_id IS DISTINCT FROM NEW.job_id)
 EXECUTE FUNCTION trigger_employee_job_change();
 
 
---drop trigger check_hire_date_trigger on employees;
+--dobre wynagrodzenie
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1000, 'imie1', 'nazwisko1', 'test1', '515.123.1234', '2000-01-01', 'IT_PROG', 11000, NULL, NULL, 60);
+
+
+--wyzsze wynagrodzenie
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1001, 'imie2', 'nazwisko2', 'test2', '515.123.1234', '2000-01-01', 'IT_PROG', 25000, NULL, NULL, 60);
+
+
+--za niskie wynagrodzenie
+INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+VALUES (1002, 'imie3', 'nazwisko3', 'test3', '515.123.1234', '2000-01-01', 'IT_PROG', 5000, NULL, NULL, 60);
+
+
+UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1000;
+UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1001;
+UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1002;
+
+UPDATE employees SET first_name = 'Marek' WHERE employee_id = 1000;
 
 DELETE FROM job_history WHERE employee_id IN (1000, 1001, 1002);
 DELETE FROM employees
 WHERE employee_id IN (1000, 1001, 1002);
-
-
-
---dobre wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1000, 'imie1', 'nazwisko1', 'test1', '515.123.1234', '2000-01-01', 'IT_PROG', 11000);
-UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1000;
-
---wyzsze wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1001, 'imie2', 'nazwisko2', 'test2', '515.123.1234', '2000-01-01', 'IT_PROG', 25000);
-UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1001;
-
---za niskie wynagrodzenie
-INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
-VALUES (1002, 'imie3', 'nazwisko3', 'test3', '515.123.1234', '2000-01-01', 'IT_PROG', 5000);
-UPDATE employees SET job_id = 'SA_MAN' WHERE employee_id = 1002;
-
-
---SELECT * from employees
---WHERE employee_id IN (1000, 1001, 1002);
-
-
---SELECT * from jobs WHERE job_id = 'SA_MAN';
-
---SELECT * from job_history
---WHERE employee_id IN (1000, 1001, 1002);
+UPDATE jobs SET max_salary = 20080 WHERE job_id = 'SA_MAN';

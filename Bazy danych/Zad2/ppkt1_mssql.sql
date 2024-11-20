@@ -15,4 +15,4 @@ AS BEGIN
 END
 
 
---SELECT dbo.func('Sales Manager', 'Sales', 'United Kingdom')
+SELECT dbo.func('Sales Manager', 'Sales', 'United Kingdom') AS Employees
