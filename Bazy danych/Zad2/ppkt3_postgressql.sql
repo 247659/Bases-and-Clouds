@@ -19,48 +19,48 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- CREATE OR REPLACE FUNCTION trigger_employee_job_change()
--- RETURNS TRIGGER AS $$
--- DECLARE
---     new_min_salary NUMERIC(6);
---     new_max_salary NUMERIC(6);
---     current_salary NUMERIC(6);
---     salary_increase NUMERIC;
--- BEGIN
---     SELECT min_salary, max_salary INTO new_min_salary, new_max_salary
---     FROM jobs
---     WHERE job_id = NEW.job_id;
+CREATE OR REPLACE FUNCTION trigger_employee_job_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    new_min_salary NUMERIC(6);
+    new_max_salary NUMERIC(6);
+    current_salary NUMERIC(6);
+    salary_increase NUMERIC;
+BEGIN
+    SELECT min_salary, max_salary INTO new_min_salary, new_max_salary
+    FROM jobs
+    WHERE job_id = NEW.job_id;
 	
---     NEW.hire_date := CURRENT_DATE + INTERVAL '1 day';
+    NEW.hire_date := CURRENT_DATE + INTERVAL '1 day';
 
---     INSERT INTO job_history (employee_id, start_date, end_date, job_id, department_id)
---     VALUES (OLD.employee_id, OLD.hire_date, CURRENT_DATE, OLD.job_id, OLD.department_id);
+    INSERT INTO job_history (employee_id, start_date, end_date, job_id, department_id)
+    VALUES (OLD.employee_id, OLD.hire_date, CURRENT_DATE, OLD.job_id, OLD.department_id);
 
---     current_salary := NEW.salary;
+    current_salary := NEW.salary;
 
--- 	--jak mniejsze to podnoisi pracownikowi
---     IF current_salary < new_min_salary THEN
---         salary_increase := new_min_salary - current_salary;
---         NEW.salary := new_min_salary;
---         RAISE NOTICE 'Pracownik % % otrzymał podwyżkę o kwotę %', NEW.first_name, NEW.last_name, salary_increase;
+	--jak mniejsze to podnoisi pracownikowi
+    IF current_salary < new_min_salary THEN
+        salary_increase := new_min_salary - current_salary;
+        NEW.salary := new_min_salary;
+        RAISE NOTICE 'Pracownik % % otrzymał podwyżkę o kwotę %', NEW.first_name, NEW.last_name, salary_increase;
 
--- 	--jak wieksze to zmienia dla stanowiska
---     ELSIF current_salary > new_max_salary THEN
---         UPDATE jobs
---         SET max_salary = current_salary
---         WHERE job_id = NEW.job_id;
---     END IF;
+	--jak wieksze to zmienia dla stanowiska
+    ELSIF current_salary > new_max_salary THEN
+        UPDATE jobs
+        SET max_salary = current_salary
+        WHERE job_id = NEW.job_id;
+    END IF;
 
---     RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
--- CREATE OR REPLACE TRIGGER job_change_trigger
--- BEFORE UPDATE OF job_id ON employees
--- FOR EACH ROW
--- WHEN (OLD.job_id IS DISTINCT FROM NEW.job_id)
--- EXECUTE FUNCTION trigger_employee_job_change();
+CREATE OR REPLACE TRIGGER job_change_trigger
+BEFORE UPDATE OF job_id ON employees
+FOR EACH ROW
+WHEN (OLD.job_id IS DISTINCT FROM NEW.job_id)
+EXECUTE FUNCTION trigger_employee_job_change();
 
 CREATE OR REPLACE PROCEDURE change_job_title_procedure(
     IN current_job_title VARCHAR(100),
@@ -76,7 +76,6 @@ DECLARE
     first_name VARCHAR(100);
     last_name VARCHAR(100);
 	department_id_var VARCHAR(100);
-	dupa NUMERIC(6, 0);
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM countries c WHERE c.country_name = country_name_param
@@ -129,12 +128,6 @@ BEGIN
     JOIN locations l ON d.location_id = l.location_id
     JOIN countries c ON l.country_id = c.country_id
     WHERE c.country_name = country_name_param;
-	EXECUTE 'SELECT e.first_name FROM employees e';
-	
-	-- RAISE NOTICE SELECT
- --        t.employee_id, t.first_name, t.last_name, t.department_name
- --        FROM temp_updated_employees t;
-	
 	
     UPDATE employees e
     SET job_id = (
@@ -169,7 +162,7 @@ BEGIN
                 RAISE NOTICE '  Employee ID: %, Name: % %', employee_id, first_name, last_name;
             END LOOP;
         ELSE
-            RAISE NOTICE 'Brak pracowników na stanowisku % w departamencie % w kraju %!',
+            RAISE WARNING 'Brak pracowników na stanowisku % w departamencie % w kraju %!',
                 current_job_title, department_name_var, country_name_param;
         END IF;
     END LOOP;

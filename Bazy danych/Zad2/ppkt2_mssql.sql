@@ -21,7 +21,7 @@ BEGIN
 	WHERE employees.employee_id = i.employee_id
 	AND i.job_id <> (SELECT job_id FROM deleted WHERE deleted.employee_id = i.employee_id);
 
-	DECLARE @new_min_salary NUMERIC(8,2), @new_max_salary NUMERIC(8,2), @current_salary NUMERIC(8,2), @salary_increase NUMERIC(8,2);
+	DECLARE @new_min_salary NUMERIC(6), @new_max_salary NUMERIC(6), @current_salary NUMERIC(6), @salary_increase NUMERIC(6);
 	DECLARE @employee_id NUMERIC(6);
 	DECLARE @first_name VARCHAR(20), @last_name VARCHAR(20), @job_id VARCHAR(20);
 	DECLARE salary_cursor CURSOR FOR
