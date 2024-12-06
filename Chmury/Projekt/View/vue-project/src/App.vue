@@ -1,42 +1,41 @@
 <script setup>
 import { Authenticator } from '@aws-amplify/ui-vue';
 import '@aws-amplify/ui-vue/styles.css';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+
+import axios from 'axios';
 
 const file = ref(null);
 
+// Funkcja obsługująca zmianę pliku
 const handleFileChange = (event) => {
-  file.value = event.target.files[0];
+  file.value = event.target.files[0]; // Przypisujemy wybrany plik do file.value
 };
 
-const uploadFileToApi = async () => {
+// Funkcja przesyłająca plik
+const uploadFile = async () => {
   if (!file.value) {
-    alert('Nie wybrano pliku!');
+    console.error('No file selected');
     return;
   }
 
-  const formData = new FormData();
-  formData.append('file', file.value);
+  const fileName = file.value.name; // Pobieramy nazwę pliku
+  const apiUrl = `https://tnvswpmu22.execute-api.eu-north-1.amazonaws.com/Stage1/test2/${fileName}`; // Dynamiczna ścieżka z nazwą pliku
 
   try {
-    const response = await fetch(
-      'http://localhost:5173/',
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
+    // Wysyłanie pliku jako surowych danych (Blob/File)
+    const response = await axios.put(apiUrl, file.value, {
+      headers: {
+        'Content-Type': file.value.type || 'application/octet-stream', // Typ MIME pliku
+      },
+    });
 
-    if (response.ok) {
-      const data = await response.json();
-      alert(`Plik przesłany: ${data.message}`);
-    } else {
-      alert('Błąd przesyłania pliku!');
-      console.error('Błąd odpowiedzi:', await response.text());
+    console.log('File uploaded successfully:', response.data);
+  } catch (err) {
+    console.error('Error uploading file:', err);
+    if (err.response) {
+      console.error('Response error:', err.response.data);
     }
-  } catch (error) {
-    console.error('Błąd przesyłania pliku:', error);
-    alert('Błąd przesyłania pliku!');
   }
 };
 </script>
@@ -52,7 +51,7 @@ const uploadFileToApi = async () => {
         <div class="fileSend">
           <h1>Prześlij plik przez API</h1>
           <input type="file" @change="handleFileChange" />
-          <button @click="uploadFileToApi">Prześlij plik</button>
+          <button @click="uploadFile">Prześlij plik</button>
         </div>
       </div>
     </template>
@@ -77,5 +76,4 @@ const uploadFileToApi = async () => {
   text-align: center;
   margin: 0 auto;
 }
-
 </style>
