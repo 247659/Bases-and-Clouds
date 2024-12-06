@@ -47,11 +47,13 @@ const uploadFile = async () => {
         <h1>Hello {{ user.username }}!</h1>
         <button @click="signOut">Sign Out</button>
       </div>
-      <div class="fileBox">
-        <div class="fileSend">
-          <h1>Prześlij plik przez API</h1>
-          <input type="file" @change="handleFileChange" />
-          <button @click="uploadFile">Prześlij plik</button>
+      <div class="fileContainer">
+        <div class="fileBox">
+          <div class="fileSend">
+            <h1>Prześlij plik przez API</h1>
+            <input class="fileChange" type="file" @change="handleFileChange" />
+            <button class="fileButton" @click="uploadFile">Prześlij plik</button>
+          </div>
         </div>
       </div>
     </template>
@@ -72,8 +74,25 @@ const uploadFile = async () => {
   margin-left: 50px;
 }
 
+.fileContainer {
+  position: absolute;
+  left: 0;
+  top: 35%;
+  width: 100%;
+}
+
 .fileBox {
   text-align: center;
   margin: 0 auto;
+  width: 30%;
 }
+
+.fileButton {
+  margin-top: 12px;
+}
+
+.fileChange {
+  margin-top: 16px;
+}
+
 </style>
