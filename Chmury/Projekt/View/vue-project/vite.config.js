@@ -15,14 +15,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  server: {
-    proxy: {
-      // Przekierowanie żądań API do zewnętrznego serwera, np. API Gateway
-      '/test2': {
-        target: 'https://tnvswpmu22.execute-api.eu-north-1.amazonaws.com/Stage1',
-        changeOrigin: true, // Zmiana nagłówka 'Origin' na ten z docelowego serwera
-        rewrite: (path) => path.replace(/^\/test2/, ''), // Opcjonalnie usunięcie prefixu /test2
-      },
-    },
-  },
 })

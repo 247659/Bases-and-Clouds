@@ -1,4 +1,20 @@
 {
+  "api": {
+    "ApiClouds": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "MyLambda"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
   "auth": {
     "cloudsprojectf8de4db7": {
       "customAuth": false,
@@ -25,6 +41,13 @@
       "service": "Cognito"
     }
   },
+  "function": {
+    "MyLambda": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
   "hosting": {
     "amplifyhosting": {
       "providerPlugin": "awscloudformation",
@@ -33,6 +56,22 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_MyLambda_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "MyLambda"
+        }
+      ]
+    },
+    "AMPLIFY_function_MyLambda_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "MyLambda"
+        }
+      ]
+    },
     "AMPLIFY_hosting_amplifyhosting_appId": {
       "usedBy": [
         {

@@ -20,7 +20,7 @@ const uploadFile = async () => {
   }
 
   const fileName = file.value.name; // Pobieramy nazwę pliku
-  const apiUrl = `https://tnvswpmu22.execute-api.eu-north-1.amazonaws.com/Stage1/test2/${fileName}`; // Dynamiczna ścieżka z nazwą pliku
+  const apiUrl = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/test2/${fileName}`; // Dynamiczna ścieżka z nazwą pliku
 
   try {
     // Wysyłanie pliku jako surowych danych (Blob/File)
