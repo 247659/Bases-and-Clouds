@@ -30,4 +30,4 @@ select * from jobs where min_salary = 2500;
 -- pojawiają się lub znikają wiersze danych.
 
 --10. Na jakim minimalnym poziomie izolacji nie mogłoby dojść do jego wystąpienia?
--- Serializable
+-- Repeatable Read
