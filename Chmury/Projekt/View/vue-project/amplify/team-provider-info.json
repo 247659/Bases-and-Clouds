@@ -30,6 +30,12 @@
       },
       "api": {
         "ApiClouds": {}
+      },
+      "storage": {
+        "cloudsproject8e1c2cd5": {
+          "bucketName": "clouds-project-storage",
+          "region": "eu-north-1"
+        }
       }
     }
   }
