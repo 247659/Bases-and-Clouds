@@ -61,6 +61,38 @@ const getFiles = async () => {
     console.error('Error fetching file list:', error);
   }
 };
+
+const downloadFile = async (fileName) => {
+
+  try {
+    const response = await axios.get(`${API_URL}/download_file/${fileName}`);
+
+    // Konwersja Base64 na binarny ArrayBuffer
+    const binaryString = atob(response.data); // Dekodowanie Base64 na string
+    const binaryArray = new Uint8Array(binaryString.length);
+
+    // Przekształcenie stringa na array of bytes
+    for (let i = 0; i < binaryString.length; i++) {
+      binaryArray[i] = binaryString.charCodeAt(i);
+    }
+
+    // Tworzenie Blob z danych binarnych
+    const blob = new Blob([binaryArray], { type: 'application/octet-stream' });
+
+    // Tworzenie linku do pobrania pliku
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+
+    console.log('File downloaded successfully:', fileName);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+  }
+};
 </script>
 
 <template>
