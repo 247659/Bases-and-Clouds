@@ -109,15 +109,17 @@ const downloadFile = async (fileName) => {
           <button class="fileButton" @click="uploadFile">Prześlij plik</button>
           <button class="getButton" @click="getFiles">Wyświetl pliki</button>
         </div>
-
-        <div v-if="fileList.length > 0" class="fileList">
-          <h2>Lista plików:</h2>
-          <ul>
-            <li v-for="fileName in fileList" :key="fileName">
-              {{ fileName }}
-              <button @click="downloadFile(fileName)">Pobierz</button>
-            </li>
-          </ul>
+        
+        <div class="fileListContainer">
+          <div v-if="fileList.length > 0" class="fileList">
+            <h1>Lista plików:</h1>
+            <ul>
+              <li v-for="fileName in fileList" :key="fileName">
+                <button id="fileButtonDownload" @click="downloadFile(fileName)">Pobierz</button>
+                <label for="fileButtonDownload"><p>{{ fileName }}</p></label>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </template>
@@ -130,7 +132,7 @@ const downloadFile = async (fileName) => {
   top: 0;
   left: 0;
   margin-left: 50px;
-  margin-top: 20px;
+  margin-top: 32px;
   display: flex;
 }
 
@@ -145,6 +147,14 @@ const downloadFile = async (fileName) => {
   width: 100%;
 }
 
+.fileContainer h1 {
+  margin: 0 auto;
+}
+
+.fileBox h1 {
+  font-size: 40px;
+}
+
 .fileBox {
   text-align: center;
   margin: 0 auto;
@@ -153,7 +163,7 @@ const downloadFile = async (fileName) => {
 
 .fileButton,
 .getButton {
-  margin-top: 12px;
+  margin-top: 30px;
   margin-right: 10px;
 }
 
@@ -162,7 +172,6 @@ const downloadFile = async (fileName) => {
 }
 
 .fileList {
-  text-align: center;
   margin-top: 20px;
 }
 
@@ -171,10 +180,30 @@ const downloadFile = async (fileName) => {
   padding: 0;
 }
 
+.fileList li:first-child {
+  margin-top: 30px;
+}
+
 .fileList li {
-  margin: 10px 0;
   display: flex;
-  justify-content: space-between;
+  margin-top: 20px;
+  margin-left: 30px;
   align-items: center;
+  font-size: 18px;
+}
+
+.fileList p:hover {
+  font-size: 19px;
+}
+
+.fileList p {
+  margin-left: 24px;
+  text-align: left;
+}
+
+.fileListContainer {
+  margin: 0 auto;
+  width: 70%;
+  text-align: left;
 }
 </style>
