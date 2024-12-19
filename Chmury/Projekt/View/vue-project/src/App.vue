@@ -15,11 +15,13 @@ const handleFileChange = (event) => {
 };
 
 // Funkcja przesyłająca plik
-const uploadFile = async () => {
+const uploadFile = async (username) => {
   if (!file.value) {
     console.error('No file selected');
     return;
   }
+
+  console.log(username);
 
   const fileName = file.value.name; // Pobieramy nazwę pliku // Dynamiczna ścieżka z nazwą pliku
 
@@ -34,7 +36,7 @@ const uploadFile = async () => {
     console.log('File content:', file.value);
     try {
       // Wysyłanie pliku jako surowych danych (Blob/File)
-      const response = await axios.put(`${API_URL}/${fileName}`, base64File, {
+      const response = await axios.put(`${API_URL}/${username}/${fileName}`, base64File, {
         headers: {
           'Content-Type': file.value.type || 'application/octet-stream', // Typ MIME pliku`
         },
@@ -51,9 +53,14 @@ const uploadFile = async () => {
   fileReader.readAsDataURL(file.value);
 };
 
-const getFiles = async () => {
+const getFiles = async (username) => {
   try {
-    const response = await axios.get(`${API_URL}/getList`);
+    console.log(username);
+    const response = await axios.get(`${API_URL}/getList`, {
+      headers: {
+        'Authorization': username,  // Wysyłamy nazwę użytkownika w nagłówku
+      }
+    });
     console.log(response);
     fileList.value = response.data.files; // Zapisanie listy plików
     console.log('Files:', fileList.value);
@@ -62,10 +69,14 @@ const getFiles = async () => {
   }
 };
 
-const downloadFile = async (fileName) => {
+const downloadFile = async (fileName, username) => {
 
   try {
-    const response = await axios.get(`${API_URL}/download_file/${fileName}`);
+    const response = await axios.get(`${API_URL}/download_file/${fileName}`,{
+      headers: {
+        'Authorization': username,  // Wysyłamy nazwę użytkownika w nagłówku
+      }
+    });
 
     // Konwersja Base64 na binarny ArrayBuffer
     const binaryString = atob(response.data); // Dekodowanie Base64 na string
@@ -106,8 +117,8 @@ const downloadFile = async (fileName) => {
         <div class="fileBox">
           <h1>Prześlij plik przez API</h1>
           <input class="fileChange" type="file" @change="handleFileChange" />
-          <button class="fileButton" @click="uploadFile">Prześlij plik</button>
-          <button class="getButton" @click="getFiles">Wyświetl pliki</button>
+          <button class="fileButton" @click="uploadFile( user.username )">Prześlij plik</button>
+          <button class="getButton" @click="getFiles( user.username )">Wyświetl pliki</button>
         </div>
         
         <div class="fileListContainer">
@@ -115,7 +126,7 @@ const downloadFile = async (fileName) => {
             <h1>Lista plików:</h1>
             <ul>
               <li v-for="fileName in fileList" :key="fileName">
-                <button id="fileButtonDownload" @click="downloadFile(fileName)">Pobierz</button>
+                <button id="fileButtonDownload" @click="downloadFile(fileName, user.username)">Pobierz</button>
                 <label for="fileButtonDownload"><p>{{ fileName }}</p></label>
               </li>
             </ul>
