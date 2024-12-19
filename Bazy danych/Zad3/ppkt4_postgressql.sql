@@ -6,7 +6,7 @@ begin;
 SELECT * FROM pg_locks;
 
 --3. W ramach sesji nr 1 na cały czas trwania transakcji załóż blokadę dzieloną na tabeli stanowisk.
-LOCK TABLE jobs IN ACCESS SHARE MODE;
+LOCK TABLE jobs IN SHARE MODE;
 
 --4. W ramach sesji nr 1 wyświetl listę wszystkich blokad.
 SELECT * FROM pg_locks;
