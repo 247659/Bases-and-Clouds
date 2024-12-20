@@ -125,9 +125,9 @@ const downloadFile = async (fileName, username) => {
           <div v-if="fileList.length > 0" class="fileList">
             <h1>Lista plików:</h1>
             <ul>
-              <li v-for="fileName in fileList" :key="fileName">
-                <button id="fileButtonDownload" @click="downloadFile(fileName, user.username)">Pobierz</button>
-                <label for="fileButtonDownload"><p>{{ fileName }}</p></label>
+              <li v-for="(fileName, index) in fileList" :key="fileName">
+                <button :id="'fileButtonDownload-' + index" @click="downloadFile(fileName, user.username)">Pobierz</button>
+                <label :for="'fileButtonDownload-' + index"><p>{{ fileName }}</p></label>
               </li>
             </ul>
           </div>
