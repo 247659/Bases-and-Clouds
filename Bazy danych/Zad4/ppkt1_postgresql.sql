@@ -7,8 +7,7 @@ create user user3;
 grant select on table departments to user1, user2, user3; 
 
 --3. Utwórz nową rolę o nazwie role1 i uczyń użytkownika user1 jej administratorem.
-create role role1;
-grant role1 to user1 with ADMIN OPTION; --??????????????????????
+create role role1 with admin user1;
 
 --4. Nadaj użytkownikowi user1 uprawnienia do dodawania departamentów z 
 --możliwością dalszego przekazywania uprawnień.
@@ -52,4 +51,7 @@ SELECT grantee.rolname AS user_name, granted.rolname AS role_name
 FROM pg_auth_members
 JOIN pg_roles grantee ON pg_auth_members.member = grantee.oid
 JOIN pg_roles granted ON pg_auth_members.roleid = granted.oid
-WHERE grantee.rolname = 'user2';
+WHERE grantee.rolname = 'user1';
+
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM role1;
+drop role role1;
