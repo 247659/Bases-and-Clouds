@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const file = ref(null);
 const fileList = ref([]);
-const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev`;
+const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/files/`;
 
 // Funkcja obsługująca zmianę pliku
 const handleFileChange = (event) => {
@@ -33,12 +33,14 @@ const uploadFile = async (username) => {
     // Zawartość pliku w formacie Base64 (usuwa prefiks data URL)
     const base64File = event.target.result.split(',')[1];
 
-    console.log('File content:', file.value);
+    console.log("file", file.value)
     try {
       // Wysyłanie pliku jako surowych danych (Blob/File)
-      const response = await axios.put(`${API_URL}/${username}/${fileName}`, base64File, {
+      const response = await axios.put(`${API_URL}${fileName}?username=${encodeURIComponent(username)}`, {
+        base64File: base64File,// Zawartość pliku w Base64
+      }, {
         headers: {
-          'Content-Type': file.value.type || 'application/octet-stream', // Typ MIME pliku`
+          'Content-Type': 'application/json', // Typ MIME pliku`
         },
       });
 
@@ -55,12 +57,7 @@ const uploadFile = async (username) => {
 
 const getFiles = async (username) => {
   try {
-    console.log(username);
-    const response = await axios.get(`${API_URL}/getList`, {
-      headers: {
-        'Authorization': username,  // Wysyłamy nazwę użytkownika w nagłówku
-      }
-    });
+    const response = await axios.get(`${API_URL}list?username=${encodeURIComponent(username)}`);
     console.log(response);
     fileList.value = response.data.files; // Zapisanie listy plików
     console.log('Files:', fileList.value);
@@ -72,14 +69,14 @@ const getFiles = async (username) => {
 const downloadFile = async (fileName, username) => {
 
   try {
-    const response = await axios.get(`${API_URL}/download_file/${fileName}`,{
-      headers: {
-        'Authorization': username,  // Wysyłamy nazwę użytkownika w nagłówku
-      }
+    console.log('Downloading file:', fileName);
+    const response = await axios.get(`${API_URL}download_file/${fileName}?username=${encodeURIComponent(username)}`,{
+      username : username,
     });
-
+    console.log('response ' + response.data.base64File);
     // Konwersja Base64 na binarny ArrayBuffer
-    const binaryString = atob(response.data); // Dekodowanie Base64 na string
+    const binaryString = atob(response.data.base64File); // Dekodowanie Base64 na string
+    console.log(binaryString);
     const binaryArray = new Uint8Array(binaryString.length);
 
     // Przekształcenie stringa na array of bytes
@@ -118,9 +115,9 @@ const downloadFile = async (fileName, username) => {
           <h1>Prześlij plik przez API</h1>
           <input class="fileChange" type="file" @change="handleFileChange" />
           <button class="fileButton" @click="uploadFile( user.username )">Prześlij plik</button>
-          <button class="getButton" @click="getFiles( user.username )">Wyświetl pliki</button>
+          <button class="getButton" @click="getFiles(user.username)">Wyświetl pliki</button>
         </div>
-        
+
         <div class="fileListContainer">
           <div v-if="fileList.length > 0" class="fileList">
             <h1>Lista plików:</h1>
