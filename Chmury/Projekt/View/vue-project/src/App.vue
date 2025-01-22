@@ -28,6 +28,30 @@ const uploadFile = async (username) => {
   // Tworzymy instancję FileReader
   const fileReader = new FileReader();
 
+  const getAccessToken = () => {
+    // Iteruj przez wszystkie klucze w localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i); // Pobierz nazwę klucza
+
+      // Sprawdź, czy klucz pasuje do wzorca
+      if (key.startsWith("CognitoIdentityServiceProvider") && key.endsWith("accessToken")) {
+        // Jeśli znajdziesz klucz, zwróć wartość
+        return localStorage.getItem(key);
+      }
+    }
+
+    // Jeśli nie znajdziesz tokena, zwróć null
+    return null;
+  };
+
+  const token = getAccessToken();
+  if (!token) {
+    console.error("No token found in localStorage");
+    return;
+  }
+  console.log(token);
+
+
   // Funkcja wykonująca się po zakończeniu odczytu pliku
   fileReader.onload = async function(event) {
     // Zawartość pliku w formacie Base64 (usuwa prefiks data URL)
@@ -36,11 +60,12 @@ const uploadFile = async (username) => {
     console.log("file", file.value)
     try {
       // Wysyłanie pliku jako surowych danych (Blob/File)
-      const response = await axios.put(`${API_URL}${fileName}?username=${encodeURIComponent(username)}`, {
+      const response = await axios.put(`${API_URL}${fileName}`, {
         base64File: base64File,// Zawartość pliku w Base64
       }, {
         headers: {
           'Content-Type': 'application/json', // Typ MIME pliku`
+          Authorization: `${token}`,
         },
       });
 
