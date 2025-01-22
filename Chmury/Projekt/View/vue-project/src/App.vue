@@ -95,6 +95,7 @@ const getFiles = async (username) => {
         Authorization: `${token}`,
       },
     });
+    console.log("Przesłane dane!!!!")
     console.log(response);
     fileList.value = response.data.files; // Zapisanie listy plików
     console.log('Files:', fileList.value);

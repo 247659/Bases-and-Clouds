@@ -14,31 +14,39 @@ const getList = async (req, res) => {
     }
 
     try {
+        // Weryfikacja tokena
         const payload = await verifier.verify(token);
         console.log("Token verified:", payload);
 
+        // Parametry listowania plików
         const params = {
-        Bucket: BUCKET_NAME,
-        Prefix: `${payload.username}/`,
-      };
+            Bucket: BUCKET_NAME,
+            Prefix: `${payload.username}/`,
+        };
 
+        // Pobieranie wersji obiektów z S3
+        const data = await s3.listObjectVersions(params).promise();
+        console.log('S3 Object Versions:', data.Versions);
 
-  
-      const data = await s3.listObjectsV2(params).promise();
-      console.log('S3 Object Keys:', data.Contents.map(item => item.Key));
-      
-      // Filtrujemy pliki i usuwamy prefiks folderu
-      const files = data.Contents
-        .filter((obj) => obj.Key !== payload.username)  // Pomijamy sam folder
-        .map((obj) => obj.Key.split('/').pop()); // Usuwamy prefix folderu dynamicznie
-  
-      console.log('Po przekształceniu:', files);
-  
-      res.status(200).json({ files });
+        // Przetwarzanie plików z wersjami
+        const files = data.Versions
+            .filter((obj) => obj.Key !== `${payload.username}/`) // Pomijamy same foldery
+            .map((obj) => ({
+                filename: obj.Key.split('/').pop(), // Nazwa pliku
+                versionId: obj.VersionId, // ID wersji
+                lastModified: obj.LastModified, // Data modyfikacji
+                size: obj.Size, // Rozmiar pliku
+                isLatest: obj.IsLatest // Czy to najnowsza wersja
+            }));
+
+        console.log('Przetworzone pliki:', files);
+
+        // Zwracanie danych do frontendu
+        res.status(200).json({ files });
     } catch (err) {
-      console.error('Error listing files:', err.message);
-      res.status(500).json({ error: `Error: ${err.message}` });
+        console.error('Error listing files:', err.message);
+        res.status(500).json({ error: `Error: ${err.message}` });
     }
-  };
+};
 
-  module.exports = {getList}
+module.exports = { getList };
