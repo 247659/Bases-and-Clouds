@@ -1,15 +1,8 @@
-const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const AWS = require("aws-sdk");
+const verifier = require("../middleware/verifier");
 
 const BUCKET_NAME = "clouds-project-storage"; // Podmień na właściwą nazwę bucketu
 const s3 = new AWS.S3();
-
-// Konfiguracja CognitoJwtVerifier
-const verifier = CognitoJwtVerifier.create({
-    userPoolId: "eu-north-1_regp2NIhU", // Podaj ID swojej grupy użytkowników Cognito
-    tokenUse: "access",      // Sprawdzamy access token
-    clientId: ["69t98uivj2p9b9i9dn7q8obfqb", "pis58beaainieqgqccc2me8pe"] // Podaj ID aplikacji klienta
-});
 
 const uploadFile = async (req, res) => {
     const { fileName } = req.params;

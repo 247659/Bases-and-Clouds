@@ -9,6 +9,22 @@ const file = ref(null);
 const fileList = ref([]);
 const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/files/`;
 
+const getAccessToken = () => {
+  // Iteruj przez wszystkie klucze w localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i); // Pobierz nazwę klucza
+
+    // Sprawdź, czy klucz pasuje do wzorca
+    if (key.startsWith("CognitoIdentityServiceProvider") && key.endsWith("accessToken")) {
+      // Jeśli znajdziesz klucz, zwróć wartość
+      return localStorage.getItem(key);
+    }
+  }
+
+  // Jeśli nie znajdziesz tokena, zwróć null
+  return null;
+};
+
 // Funkcja obsługująca zmianę pliku
 const handleFileChange = (event) => {
   file.value = event.target.files[0]; // Przypisujemy wybrany plik do file.value
@@ -27,22 +43,6 @@ const uploadFile = async (username) => {
 
   // Tworzymy instancję FileReader
   const fileReader = new FileReader();
-
-  const getAccessToken = () => {
-    // Iteruj przez wszystkie klucze w localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i); // Pobierz nazwę klucza
-
-      // Sprawdź, czy klucz pasuje do wzorca
-      if (key.startsWith("CognitoIdentityServiceProvider") && key.endsWith("accessToken")) {
-        // Jeśli znajdziesz klucz, zwróć wartość
-        return localStorage.getItem(key);
-      }
-    }
-
-    // Jeśli nie znajdziesz tokena, zwróć null
-    return null;
-  };
 
   const token = getAccessToken();
   if (!token) {
@@ -81,8 +81,20 @@ const uploadFile = async (username) => {
 };
 
 const getFiles = async (username) => {
+  const token = getAccessToken();
+  if (!token) {
+    console.error("No token found in localStorage");
+    return;
+  }
+  console.log(token);
+
   try {
-    const response = await axios.get(`${API_URL}list?username=${encodeURIComponent(username)}`);
+    const response = await axios.get(`${API_URL}list`, {
+      headers: {
+        'Content-Type': 'application/json', // Typ MIME pliku`
+        Authorization: `${token}`,
+      },
+    });
     console.log(response);
     fileList.value = response.data.files; // Zapisanie listy plików
     console.log('Files:', fileList.value);
@@ -92,11 +104,20 @@ const getFiles = async (username) => {
 };
 
 const downloadFile = async (fileName, username) => {
+  const token = getAccessToken();
+  if (!token) {
+    console.error("No token found in localStorage");
+    return;
+  }
+  console.log(token);
 
   try {
     console.log('Downloading file:', fileName);
-    const response = await axios.get(`${API_URL}download_file/${fileName}?username=${encodeURIComponent(username)}`,{
-      username : username,
+    const response = await axios.get(`${API_URL}download_file/${fileName}`, {
+      headers: {
+      'Content-Type': 'application/json', // Typ MIME pliku`
+          Authorization: `${token}`,
+    },
     });
     console.log('response ' + response.data.base64File);
     // Konwersja Base64 na binarny ArrayBuffer
