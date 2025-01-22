@@ -25,11 +25,12 @@ a,
   body {
     display: flex;
     place-items: center;
+    background-color: #176dc4; /* szare tło dla całej strony */
   }
 
   #app {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+     padding: 0 2rem;
   }
 }
