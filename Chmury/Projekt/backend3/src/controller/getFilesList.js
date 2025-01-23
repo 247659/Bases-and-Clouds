@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const verifier = require("../middleware/verifier");
+const { saveLogs } = require('./saveLogs');
 
 AWS.config.update({ region: 'eu-north-1' });
 const s3 = new AWS.S3();
@@ -15,8 +16,10 @@ const getList = async (req, res) => {
 
     try {
         // Weryfikacja tokena
+
         const payload = await verifier.verify(token);
         console.log("Token verified:", payload);
+
 
         // Parametry listowania plików
         const params = {
@@ -41,11 +44,23 @@ const getList = async (req, res) => {
 
         console.log('Przetworzone pliki:', files);
 
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Get file list for user: ${payload.username}`
+        });
+
         // Zwracanie danych do frontendu
         res.status(200).json({ files });
     } catch (err) {
-        console.error('Error listing files:', err.message);
-        res.status(500).json({ error: `Error: ${err.message}` });
+        if (err.message === "Invalid signature"){
+            console.error("Error:", err.message);
+            res.status(401).json({ error: `Error: ${err.message}` });
+        } else {
+            console.error("Error:", err.message);
+            res
+                .status(err.name === "TokenExpiredError" ? 401 : 500)
+                .json({ error: `Error: ${err.message}` });
+        }
     }
 };
 
