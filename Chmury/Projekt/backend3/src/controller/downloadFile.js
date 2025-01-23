@@ -9,9 +9,11 @@ const BUCKET_NAME = 'clouds-project-storage';
 
 const downloadFile = async (req, res) => {
     const { fileName } = req.params;
+    const {versionId} = req.query;
     const token = req.headers.authorization || req.headers.Authorization;
 
     console.log(fileName)
+    console.log(versionId)
 
     if (!token) {
         return res.status(401).json({ error: "Authorization token is missing" });
@@ -27,9 +29,11 @@ const downloadFile = async (req, res) => {
         const params = {
             Bucket: BUCKET_NAME,
             Key: `${payload.username}/${fileName}`,
-        };
+            VersionId: versionId,
+    };
 
-      const data = await s3.getObject(params).promise();
+
+        const data = await s3.getObject(params).promise();
 
         await saveLogs({
             timestamp: new Date().toISOString(),
