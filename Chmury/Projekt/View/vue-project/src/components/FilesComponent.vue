@@ -1,13 +1,15 @@
 <script setup>
 import { Authenticator } from '@aws-amplify/ui-vue';
 import '@aws-amplify/ui-vue/styles.css';
-import { ref, onMounted } from 'vue';
-import { BContainer, BTable, BButton, BFormFile } from 'bootstrap-vue-next'
+import { ref, onMounted, computed } from 'vue';
+import { BContainer, BTable, BButton, BFormFile, BCol, BFormInput, BInputGroupText, BInputGroup, BFormGroup, BRow, BFormSelect, BCard} from 'bootstrap-vue-next'
 import { useToast } from 'vue-toastification';
 
 import axios from 'axios';
 
 const file = ref(null)
+const filter = ref('')
+const selectedFilter = ref('')
 const fileList = ref([]);
 const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/files/`;
 const toast = useToast();
@@ -23,7 +25,15 @@ const fields = [
   { key: "filename", label: "File Name",  class: 'text-center' },
   { key: "lastModified", label: "Last Modified",  class: 'text-center' },
   { key: "size", label: "Size [KB]",  class: 'text-center' },
-  { key: "actions", label: "Download",  class: 'text-center' }
+  { key: "actions", label: "Download",  class: 'text-center' },
+  { key: "actions2", label: "See versions", class: "text-center"}
+]
+
+const filters = [
+    {id: 'newest', text: "Newest files"},
+    {id: 'oldest', text: "Oldest files"},
+    {id: 'a-z', text: "Name A-Z"},
+    {id: 'z-a', text: "Name Z-A"}
 ]
 
 const getAccessToken = () => {
@@ -88,6 +98,7 @@ const uploadFile = async (username) => {
       });
 
       console.log('File uploaded successfully:', response.data);
+      toast.success('File uploaded successfully!')
     } catch (err) {
       console.error('Error uploading file:', err);
       if (err.response) {
@@ -104,7 +115,6 @@ const getFiles = async (username) => {
     console.error("No token found in localStorage");
     return;
   }
-  console.log(token);
 
   try {
     const response = await axios.get(`${API_URL}list`, {
@@ -122,26 +132,25 @@ const getFiles = async (username) => {
   }
 };
 
-const downloadFile = async (fileName, username) => {
+const downloadFile = async (fileName, id) => {
   const token = getAccessToken();
   if (!token) {
     console.error("No token found in localStorage");
     return;
   }
-  console.log(token);
+
+  console.log("Nazwa pliku " + fileName)
+  console.log("Jego wersja " + id)
 
   try {
-    console.log('Downloading file:', fileName);
-    const response = await axios.get(`${API_URL}download_file/${fileName}`, {
+    const response = await axios.get(`${API_URL}download_file/${fileName}?versionId=${encodeURIComponent(id)}`, {
       headers: {
       'Content-Type': 'application/json', // Typ MIME pliku`
           Authorization: `${token}`,
     },
     });
-    console.log('response ' + response.data.base64File);
     // Konwersja Base64 na binarny ArrayBuffer
     const binaryString = atob(response.data.base64File); // Dekodowanie Base64 na string
-    console.log(binaryString);
     const binaryArray = new Uint8Array(binaryString.length);
 
     // Przekształcenie stringa na array of bytes
@@ -166,6 +175,36 @@ const downloadFile = async (fileName, username) => {
     console.error('Error downloading file:', error);
   }
 };
+
+const sortedFiles = computed(() => {
+
+    let latestFiles = fileList.value.filter(file => file.isLatest);
+
+    if (selectedFilter.value === 'newest') {
+        latestFiles = latestFiles.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+    } else if (selectedFilter.value === 'oldest') {
+        latestFiles = latestFiles.sort((a, b) => new Date(a.lastModified) - new Date(b.lastModified));
+    } else if (selectedFilter.value === "a-z") {
+        latestFiles = latestFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+    } else if (selectedFilter.value === "z-a") {
+        latestFiles = latestFiles.sort((a, b) => b.filename.localeCompare(a.filename));
+    } 
+
+    return latestFiles;
+});
+
+
+const fileVersions = (filename) => {
+  return fileList.value.filter(file => file.filename === filename && !file.isLatest);
+};
+
+// const downloadVersionedFile = (id) => {
+//     console.log(id)
+//     let file = fileList.value.filter(file => file.versionId ===  id);
+//     console.log(file[0].versionId)
+//     this.downloadFile()
+// }
+
 </script>
 
 <template>
@@ -181,8 +220,24 @@ const downloadFile = async (fileName, username) => {
             <font-awesome-icon icon="fa-solid fa-list" /> Wyświetl pliki
         </BButton>
       </div>
-  
-      <BTable v-if="fileList.length > 0" :items="fileList" :fields="fields" striped bordered hover class="mt-3">
+      <BRow v-if="fileList.length > 0">
+        <BCol lg="4" class="my-1">
+                <BFormGroup>
+                    <BInputGroup>
+                        <BFormInput v-model="filter" type="search" placeholder="Type to Search"/>
+                        <BInputGroupText>
+                            <BButton :disabled="!filter" @click="filter = ''">Clear</BButton>
+                        </BInputGroupText>
+                    </BInputGroup>
+                </BFormGroup>
+            </BCol>
+            <BCol lg="4" class="my-1">
+                <BFormGroup>
+                    <BFormSelect v-model="selectedFilter" :options="[{ value: '', text: 'Filtr By...' }, ...filters.map(filtr => ({ value: filtr.id, text: filtr.text }))]" />
+                </BFormGroup>
+            </BCol>
+      </BRow>
+      <BTable v-if="fileList.length > 0" :items="sortedFiles" :fields="fields" :filter="filter" striped bordered hover class="mt-3">
         <template #cell(filename)="data">
           {{ data.item.filename }}
         </template>
@@ -193,15 +248,44 @@ const downloadFile = async (fileName, username) => {
           {{ data.item.size }}
         </template>
         <template #cell(actions)="data">
-            <BButton variant="primary" @click="downloadFile(data.item.filename)">
+            <BButton variant="primary" @click="downloadFile(data.item.filename, data.item.versionId)">
                 <font-awesome-icon icon="fa-solid fa-download" />
             </BButton>
+        </template>
+        <template #cell(actions2)="data">
+            <BButton variant="primary"  @click="data.toggleDetails">
+                {{ data.detailsShowing ? 'Hide' : 'Show' }} versions
+            </BButton>
+        </template>
+        <template #row-details="data">
+            <BCard>
+                <p class="font-weight-bold"> Versions for file: <strong>{{ data.item.filename }}</strong></p>
+                <BTable :items="fileVersions(data.item.filename)" :fields="[
+                    { key: 'lastModified', label: 'Last Modified', class: 'text-center'},
+                    { key: 'size', label: 'Size [KB]', class: 'text-center'},
+                    { key: 'actions', label: 'Download', class: 'text-center'}
+                    ]" striped bordered hover small>
+                    <template #cell(lastModified)="version">
+                        {{ new Date(version.item.lastModified).toLocaleString('pl-PL') }}
+                    </template>
+                    <template #cell(size)="version">
+                        {{ version.item.size }}
+                    </template>
+                    <template #cell(actions)="version">
+                        <BButton variant="primary" @click="downloadFile(version.item.filename, version.item.versionId)">
+                            <font-awesome-icon icon="fa-solid fa-download" />
+                        </BButton>
+                    </template>
+                </BTable>
+            </BCard>
         </template>
       </BTable>
     </BContainer>
   </template>
   
   <style scoped>
-
+        .color {
+            color: blueviolet;
+        }
   </style>
   
