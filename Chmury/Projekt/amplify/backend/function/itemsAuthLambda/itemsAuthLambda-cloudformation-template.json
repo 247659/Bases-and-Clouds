@@ -160,11 +160,21 @@
                   }
                 ]
               }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::clouds-project-storage/logs2/*"
+              }
             }
           ]
         }
       }
     }
+
   },
   "Outputs": {
     "Name": {

@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const verifier = require("../middleware/verifier");
+const { saveLogs } = require('./saveLogs');
 
 AWS.config.update({ region: 'eu-north-1' });
 const s3 = new AWS.S3();
@@ -42,6 +43,11 @@ const getList = async (req, res) => {
             }));
 
         console.log('Przetworzone pliki:', files);
+
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Get file list for user: ${payload.username}`
+        });
 
         // Zwracanie danych do frontendu
         res.status(200).json({ files });

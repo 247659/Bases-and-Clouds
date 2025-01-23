@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid"); // Do generowania unikalnych ticketów
 const verifier = require("../middleware/verifier");
 const path = require("node:path");
+const { saveLogs } = require('./saveLogs');
 const BUCKET_NAME = "clouds-project-storage"; // Nazwa Twojego bucketu
 const s3 = new AWS.S3();
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
@@ -88,6 +89,10 @@ const uploadFile = async (req, res) => {
             res.status(200).json({ message: "File is being processed", ticketId: ticketId });
         } else {
             await s3.upload(params).promise();
+            await saveLogs({
+                timestamp: new Date().toISOString(),
+                message: `File uploaded ${fileName} for user: ${payload.username}`
+            });
             console.log(`File uploaded successfully for user: ${payload.username}`);
 
             res.status(200).json({ message: "File is being processed" });

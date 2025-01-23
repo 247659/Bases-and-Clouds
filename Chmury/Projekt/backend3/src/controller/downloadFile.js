@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const verifier = require("../middleware/verifier");
+const { saveLogs } = require('./saveLogs');
 
 AWS.config.update({ region: 'eu-north-1' });
 const s3 = new AWS.S3();
@@ -30,7 +31,10 @@ const downloadFile = async (req, res) => {
 
       const data = await s3.getObject(params).promise();
 
-
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `File downloaded ${fileName} for user: ${payload.username}`
+        });
 
 
         const base64File = data.Body.toString('base64');

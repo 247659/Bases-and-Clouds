@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\amplify",
+    "\\amplify\\backend",
+    "\\amplify\\backend\\function",
+    "\\amplify\\backend\\function\\itemsAuthLambda",
+    "\\backend3",
+    "\\backend3\\src",
+    "\\backend3\\src\\controller"
+  ],
+  "SelectedNode": "\\amplify\\backend\\function\\itemsAuthLambda\\itemsAuthLambda-cloudformation-template.json",
+  "PreviewInSolutionExplorer": false
+}
