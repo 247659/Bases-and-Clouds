@@ -19,6 +19,7 @@
     "bootstrap-vue-next": "^0.26.21",
     "cors": "^2.8.5",
     "font-awesome": "^4.7.0",
+    "sass": "^1.83.4",
     "vue": "^3.5.13",
     "vue-toastification": "^2.0.0-rc.5"
   },

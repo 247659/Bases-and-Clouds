@@ -12,9 +12,9 @@ import axios from 'axios';
 <template>
   <authenticator>
     <template v-slot="{ user, signOut }">
-      <BNavbar  v-b-color-mode="'dark'" toggleable="lg" variant="success">
+      <BNavbar  v-b-color-mode="'dark'" toggleable="lg" class="custom-navbar" variant="dark">
         <BNavbarBrand> Welcome, {{ user.username }}! </BNavbarBrand>
-        <BButton @click="signOut" variant="danger">
+        <BButton @click="signOut" variant="warning">
           <font-awesome-icon icon="fa-solid fa-sign-out-alt" class="me-2"/>Sign Out
         </BButton>
       </BNavbar>
@@ -29,5 +29,14 @@ import axios from 'axios';
 
 
 <style>
-
+  /* .custom-navbar {
+  background-color: #5c6bc0; 
+  color: #fff; 
+} */
+ body {
+  background-color: rgb(144, 200, 219); /* Kolor tła */
+  background-size: cover; /* Dopasowanie obrazu */
+  background-position: center; /* Wyśrodkowanie */
+  margin: 0; /* Usuń margines domyślny */
+}
 </style>

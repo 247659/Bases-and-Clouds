@@ -13,6 +13,7 @@ const selectedFilter = ref('')
 const fileList = ref([]);
 const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/files/`;
 const toast = useToast();
+const showFiles = ref(false)
 
 defineProps({
   user: {
@@ -110,6 +111,8 @@ const uploadFile = async (username) => {
 };
 
 const getFiles = async (username) => {
+  showFiles.value = !showFiles.value;
+  console.log(showFiles.value)
   const token = getAccessToken();
   if (!token) {
     console.error("No token found in localStorage");
@@ -198,13 +201,6 @@ const fileVersions = (filename) => {
   return fileList.value.filter(file => file.filename === filename && !file.isLatest);
 };
 
-// const downloadVersionedFile = (id) => {
-//     console.log(id)
-//     let file = fileList.value.filter(file => file.versionId ===  id);
-//     console.log(file[0].versionId)
-//     this.downloadFile()
-// }
-
 </script>
 
 <template>
@@ -217,10 +213,10 @@ const fileVersions = (filename) => {
             <font-awesome-icon icon="fa-solid fa-arrow-up-from-bracket"/> Prześlij plik
         </BButton>
         <BButton @click="getFiles(user.username)" variant="success" class="mt-2" size="lg">
-            <font-awesome-icon icon="fa-solid fa-list" /> Wyświetl pliki
+            <font-awesome-icon icon="fa-solid fa-list" /> {{ showFiles ? "Ukryj pliki" : "Wyświetl pliki"}}
         </BButton>
       </div>
-      <BRow v-if="fileList.length > 0">
+      <BRow v-if="showFiles" class="mt-3">
         <BCol lg="4" class="my-1">
                 <BFormGroup>
                     <BInputGroup>
@@ -237,7 +233,7 @@ const fileVersions = (filename) => {
                 </BFormGroup>
             </BCol>
       </BRow>
-      <BTable v-if="fileList.length > 0" :items="sortedFiles" :fields="fields" :filter="filter" striped bordered hover class="mt-3">
+      <BTable v-if="showFiles" :items="sortedFiles" :fields="fields" :filter="filter" striped hover class="mt-3">
         <template #cell(filename)="data">
           {{ data.item.filename }}
         </template>
@@ -287,5 +283,19 @@ const fileVersions = (filename) => {
         .color {
             color: blueviolet;
         }
+
+        .custom-table {
+  background-color: #343a40; /* Dark background */
+  color: #f8f9fa; /* Light text color */
+}
+
+.custom-table th {
+  background-color: #007bff; /* Blue header */
+}
+
+.custom-table tbody tr:hover {
+  background-color: #495057; /* Darker background on hover */
+}
+
   </style>
   
