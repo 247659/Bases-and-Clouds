@@ -77,9 +77,16 @@ exports.handler = async (event, context) => {
         message: `Ticket updated succesfully for ticket: ${ticketId} for user: ${username}`
       });
     } catch (err) {
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Error processing ticket ${ticketId} for user: ${username}`
+        });
       console.error(`Error processing ticket ${ticketId}:`, err.message);
     }
   }
-
+    await saveLogs({
+        timestamp: new Date().toISOString(),
+        message: `SQS messages processed successfully`
+    });
   return { statusCode: 200, body: JSON.stringify({ message: "SQS messages processed successfully" }) };
 };

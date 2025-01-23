@@ -32,10 +32,18 @@ const uploadFile = async (req, res) => {
     const token = req.headers.authorization || req.headers.Authorization;
 
     if (!token) {
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Authorization token is missing`
+        });
         return res.status(401).json({ error: "Authorization token is missing" });
     }
 
     if (!fileName || !base64File) {
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `No filename or file content provided`
+        });
         return res
             .status(400)
             .json({ error: "No file name or file content provided" });
@@ -53,6 +61,10 @@ const uploadFile = async (req, res) => {
         console.log(fileExtension);
 
         if (fileExtension === ".zip") {
+            await saveLogs({
+                timestamp: new Date().toISOString(),
+                message: `Generting unique ticket for user: ${payload.username}`
+            });
             const ticketId = uuidv4(); // Generujemy unikalny ticket
             await saveTicketStatus(ticketId, "Processing");
 
@@ -71,8 +83,15 @@ const uploadFile = async (req, res) => {
             };
 
             await sqs.sendMessage(sqsParams).promise();
+            await saveLogs({
+                timestamp: new Date().toISOString(),
+                message: `Message sent to SQS for ticket ${ticketId} for user: ${payload.username}`
+            });
             console.log(`Message sent to SQS for ticket ${ticketId}`);
-
+            await saveLogs({
+                timestamp: new Date().toISOString(),
+                message: `File is being processed for user: ${payload.username}`
+            });
             res.status(200).json({ message: "File is being processed", ticketId });
         } else {
             const params = {
