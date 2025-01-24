@@ -14,12 +14,12 @@ import axios from 'axios';
     <template v-slot="{ user, signOut }">
       <BNavbar  v-b-color-mode="'dark'" toggleable="lg" class="custom-navbar" variant="dark">
         <BNavbarBrand> Welcome, {{ user.username }}! </BNavbarBrand>
-        <BButton @click="signOut" variant="warning">
+        <BButton @click="signOut" variant="danger">
           <font-awesome-icon icon="fa-solid fa-sign-out-alt" class="me-2"/>Sign Out
         </BButton>
       </BNavbar>
 
-      <BContainer>
+      <BContainer class="style-container">
           <FilesComponent :user="user"/>
       </BContainer>
 
@@ -33,7 +33,10 @@ import axios from 'axios';
   background-color: #5c6bc0; 
   color: #fff; 
 } */
- body {
+.style-container {
+  width: 100%;
+ }
+body {
   background-color: rgb(144, 200, 219); /* Kolor tła */
   background-size: cover; /* Dopasowanie obrazu */
   background-position: center; /* Wyśrodkowanie */

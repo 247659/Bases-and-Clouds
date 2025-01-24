@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-app.use(bodyParser.json());
+
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*'); // Pozwala na wszystkie pochodzenia

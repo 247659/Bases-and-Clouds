@@ -15,6 +15,8 @@ const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/fil
 const toast = useToast();
 const showFiles = ref(false)
 
+const MIN_PART_SIZE = 5242880;
+
 defineProps({
   user: {
     type: Object,
@@ -25,7 +27,7 @@ defineProps({
 const fields = [
   { key: "filename", label: "File Name",  class: 'text-center' },
   { key: "lastModified", label: "Last Modified",  class: 'text-center' },
-  { key: "size", label: "Size [KB]",  class: 'text-center' },
+  { key: "size", label: "Size",  class: 'text-center' },
   { key: "actions", label: "Download",  class: 'text-center' },
   { key: "actions2", label: "See versions", class: "text-center"}
 ]
@@ -58,7 +60,6 @@ const handleFileChange = (event) => {
   file.value = event.target.files[0]; // Przypisujemy wybrany plik do file.value
 };
 
-// Funkcja przesyłająca plik
 const uploadFile = async (username) => {
   if (!file.value) {
     console.error('No file selected');
@@ -108,6 +109,112 @@ const uploadFile = async (username) => {
     }
   };
   fileReader.readAsDataURL(file.value);
+};
+
+
+// Funkcja przesyłająca plik
+const uploadFileBigger = async (username) => {
+  if (!file.value) {
+    console.error('No file selected');
+    toast.error('No file selected');
+    return;
+  }
+
+  const fileName = file.value.name;
+  const token = getAccessToken();
+  if (!token) {
+    console.error("No token found in localStorage");
+    return;
+  }
+
+  try {
+    // 1. Wysyłamy zapytanie o inicjowanie multipart upload
+    const response = await axios.put(`${API_URL}multipart/test`, {
+      fileName: fileName,
+      fileSize: file.value.size
+    }, {
+      headers: {
+        Authorization: `${token}`,
+      },
+    });
+
+    const { uploadId, parts } = response.data;
+
+    // 2. Dzielimy plik na części i przesyłamy każdą część
+    await uploadFileParts(uploadId, parts, file.value);
+    toast.success('File uploaded successfully!');
+  } catch (err) {
+    console.error('Error uploading file:', err);
+    if (err.response) {
+      console.error('Response error:', err.response.data);
+    }
+  }
+};
+
+const uploadFileParts = async (uploadId, parts, file) => {
+  let partSize = Math.ceil(file.size / parts.length);
+
+// Wymuszenie minimalnego rozmiaru części
+if (partSize < MIN_PART_SIZE) {
+    partSize = MIN_PART_SIZE;
+}
+  const promises = [];
+  const progress = Array(parts.length).fill(0);
+  console.log("Rozmiar " + partSize)
+  const updateProgress = () => {
+    const totalProgress = (progress.reduce((a, b) => a + b, 0) / parts.length) * 100;
+    console.log(`Upload progress: ${totalProgress.toFixed(2)}%`);
+  };
+
+
+  console.log("Rozmiar2: " + partSize)
+  for (let i = 0; i < parts.length; i++) {
+    const start = i * partSize;
+    const end = Math.min(start + partSize, file.size);
+    const part = file.slice(start, end);
+
+    const partResponse = await axios.put(parts[i].url, part, {
+      headers: {
+        "Content-Type": file.type,
+      },
+      onUploadProgress: (event) => {
+        progress[i] = event.loaded / event.total;
+        updateProgress();
+      },
+    }).then((res) => {
+      parts[i] = { ETag: res.headers.etag, PartNumber: i + 1 };
+    });
+
+    promises.push(partResponse);
+  }
+
+  // Czekamy na zakończenie wszystkich części uploadu
+  await Promise.all(promises);
+  finishMultipartUpload(uploadId, file.name, parts);
+};
+
+const finishMultipartUpload = async (uploadId, fileName, parts) => {
+  const token = getAccessToken();
+  if (!token) {
+    console.error("No token found in localStorage");
+    return;
+  }
+
+  try {
+    const response = await axios.put(`${API_URL}complete/test`, {
+      uploadId,
+      fileName,
+      parts, // Lista części z numerami i ETag (w tym przypadku część URL i ETag)
+    }, {
+      headers: {
+        Authorization: `${token}`,
+      },
+    });
+
+    console.log('File upload completed successfully:', response.data);
+  } catch (err) {
+    console.error('Error completing upload:', err);
+  }
 };
 
 const getFiles = async (username) => {
@@ -196,10 +303,22 @@ const sortedFiles = computed(() => {
     return latestFiles;
 });
 
-
 const fileVersions = (filename) => {
   return fileList.value.filter(file => file.filename === filename && !file.isLatest);
 };
+
+const calculateSize = (size) => {
+    let temp = 0
+    if (size < 1024) {
+      return `${size}B`
+    } else if (size > 1024 && size < 1048576) {
+      temp = Math.round((size / 1000) * 100) / 100
+      return `${temp} KB`
+    } else {
+      temp = Math.round((size / 1000000) * 100) / 100
+      return `${temp} MB`
+    }
+}
 
 </script>
 
@@ -241,7 +360,7 @@ const fileVersions = (filename) => {
             {{ new Date(data.item.lastModified).toLocaleString('pl-PL') }}
         </template>
         <template #cell(size)="data">
-          {{ data.item.size }}
+          {{ calculateSize(data.item.size) }}
         </template>
         <template #cell(actions)="data">
             <BButton variant="primary" @click="downloadFile(data.item.filename, data.item.versionId)">
@@ -258,14 +377,14 @@ const fileVersions = (filename) => {
                 <p class="font-weight-bold"> Versions for file: <strong>{{ data.item.filename }}</strong></p>
                 <BTable :items="fileVersions(data.item.filename)" :fields="[
                     { key: 'lastModified', label: 'Last Modified', class: 'text-center'},
-                    { key: 'size', label: 'Size [KB]', class: 'text-center'},
+                    { key: 'size', label: 'Size', class: 'text-center'},
                     { key: 'actions', label: 'Download', class: 'text-center'}
                     ]" striped bordered hover small>
                     <template #cell(lastModified)="version">
                         {{ new Date(version.item.lastModified).toLocaleString('pl-PL') }}
                     </template>
                     <template #cell(size)="version">
-                        {{ version.item.size }}
+                        {{ calculateSize(version.item.size) }}
                     </template>
                     <template #cell(actions)="version">
                         <BButton variant="primary" @click="downloadFile(version.item.filename, version.item.versionId)">
