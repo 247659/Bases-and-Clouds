@@ -1,5 +1,7 @@
 const router = require("../router");
 const AWS = require("aws-sdk");
+const {saveLogs} = require("./saveLogs");
+const verifier = require("../middleware/verifier");
 const BUCKET_NAME = "clouds-project-storage";
 const s3 = new AWS.S3();
 
@@ -9,7 +11,19 @@ const complete = async (req, res) => {
     if (!uploadId || !fileName || !parts) {
         return res.status(400).json({ error: "Missing upload details" });
     }
-    console.log("HALO?????")
+
+    const token = req.headers.authorization || req.headers.Authorization;
+
+    if (!token) {
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Authorization token is missing`
+        });
+        return res.status(401).json({ error: "Authorization token is missing" });
+    }
+
+    const payload = await verifier.verify(token);
+
     try {
         // Przygotowujemy parametry do wywołania completeMultipartUpload
         const completedParts = parts.map((part) => ({
@@ -19,18 +33,20 @@ const complete = async (req, res) => {
         // Wywołanie completeMultipartUpload
         const params = {
             Bucket: BUCKET_NAME,
-            Key: `test/${fileName}`,
+            Key: `${payload.username}/${fileName}`,
             UploadId: uploadId,
             MultipartUpload: {
                 Parts: completedParts,
             },
         };
-        console.log("HALO!!!!!!!!!!!!!!!!!!!!!!!!!!?")
-        console.log("Parts sent to AWS:", completedParts);
         // Zakończenie uploadu
         await s3.completeMultipartUpload(params).promise();
-        console.log('Multipart upload completed successfully!');
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `File uploaded ${fileName} for user: ${payload.username}`
+        });
 
+        console.log(`File uploaded successfully for user: ${payload.username}`);
         res.status(200).json({ message: "File upload completed successfully" });
     } catch (err) {
         console.error("Error completing multipart upload:", err.message);

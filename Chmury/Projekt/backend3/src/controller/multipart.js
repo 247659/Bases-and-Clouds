@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-// const {saveLogs} = require("./saveLogs");
+const {saveLogs} = require("./saveLogs");
 const verifier = require("../middleware/verifier");
 const s3 = new AWS.S3();
 const BUCKET_NAME = "clouds-project-storage";
@@ -8,14 +8,22 @@ const multipart = async (req, res) => {
     const { fileName, fileSize } = req.body;
     const token = req.headers.authorization || req.headers.Authorization;
 
-    console.log("JESTEM TUTAAAAAAAAAJ");
-
     if (!token) {
-        // await saveLogs({
-        //     timestamp: new Date().toISOString(),
-        //     message: `Authorization token is missing`
-        // });
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `Authorization token is missing`
+        });
         return res.status(401).json({ error: "Authorization token is missing" });
+    }
+
+    if (!fileName) {
+        await saveLogs({
+            timestamp: new Date().toISOString(),
+            message: `No filename or file content provided`
+        });
+        return res
+            .status(400)
+            .json({ error: "No file name or file content provided" });
     }
 
     try {
@@ -24,17 +32,16 @@ const multipart = async (req, res) => {
         // Inicjowanie multipart upload
         const params = {
             Bucket: BUCKET_NAME,
-            Key: `test/${fileName}`,
+            Key: `${payload.username}/${fileName}`,
             ContentType: req.body.fileType,
         };
-        console.log("JESTEM 2222222222222222");
+
         const multipartUpload = await s3.createMultipartUpload(params).promise();
         const uploadId = multipartUpload.UploadId;
 
         // Obliczamy liczbę części na podstawie rozmiaru pliku
         const partSize = 7 * 1024 * 1024; // 5 MB na część
         const numberOfParts = Math.ceil(fileSize / partSize);
-        console.log("JESTEM 3333333333333333333");
         const parts = Array.from({ length: numberOfParts }, (_, i) => ({
             partNumber: i + 1,
             url: s3.getSignedUrl("uploadPart", {

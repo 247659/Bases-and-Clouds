@@ -105,7 +105,6 @@ function getTicketsByTicketId() {
 }
 
 
-
 const getProcessingFile = async () => {
   loading.value = true;
   if(showFiles.value){
@@ -155,8 +154,18 @@ function saveItemWithUniqueName(key, value) {
 }
 
 
-// Funkcja przesyłająca plik
 const uploadFile = async (username) => {
+    if (file.value.size < 5242880) {
+      uploadFileSmaller(username)
+      console.log("Rozmiar: " + file.value.size)
+    } else {
+      uploadFileBigger(username)
+      console.log("Rozmiar: " + file.value.size)
+    }
+}
+
+// Funkcja przesyłająca plik
+const uploadFileSmaller = async (username) => {
   if (!file.value) {
     console.error('No file selected');
     toast.error('No file selected')
