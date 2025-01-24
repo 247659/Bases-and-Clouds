@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {getList} = require('../controller/getFilesList');
 const {downloadFile} = require('../controller/downloadFile');
-const {uploadFile} = require('src/controller/uploadFile');
+const {uploadFile} = require('../controller/uploadFile');
 const {checkTicketStatus} = require('../controller/checkTicketStatus');
 
 router.put('/:fileName', uploadFile);
