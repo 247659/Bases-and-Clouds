@@ -2,7 +2,7 @@
 import { Authenticator } from '@aws-amplify/ui-vue';
 import '@aws-amplify/ui-vue/styles.css';
 import { ref, onMounted, computed } from 'vue';
-import { BContainer, BTable, BButton, BFormFile, BCol, BFormInput, BInputGroupText, BInputGroup, BFormGroup, BRow, BFormSelect, BCard} from 'bootstrap-vue-next'
+import { BContainer, BTable, BButton, BFormFile, BCol, BFormInput, BInputGroupText, BInputGroup, BFormGroup, BRow, BFormSelect, BCard, BProgress} from 'bootstrap-vue-next'
 import { useToast } from 'vue-toastification';
 
 import axios from 'axios';
@@ -17,6 +17,8 @@ const toast = useToast();
 const showFiles = ref(false)
 const showProcessing = ref(false);
 const loading = ref(false);
+const uploadProgress = ref(0); // Postęp w procentach
+
 
 const MIN_PART_SIZE = 5242880;
 
@@ -261,26 +263,25 @@ const uploadFileBigger = async (username) => {
 const uploadFileParts = async (uploadId, parts, file) => {
   let partSize = Math.ceil(file.size / parts.length);
 
-// Wymuszenie minimalnego rozmiaru części
-if (partSize < MIN_PART_SIZE) {
+  if (partSize < MIN_PART_SIZE) {
     partSize = MIN_PART_SIZE;
-}
+  }
+
   const promises = [];
   const progress = Array(parts.length).fill(0);
-  console.log("Rozmiar " + partSize)
+
   const updateProgress = () => {
     const totalProgress = (progress.reduce((a, b) => a + b, 0) / parts.length) * 100;
-    console.log(`Upload progress: ${totalProgress.toFixed(2)}%`);
+    uploadProgress.value = totalProgress.toFixed(2); // Aktualizacja zmiennej
+    console.log(`Upload progress: ${uploadProgress.value}%`);
   };
 
-
-  console.log("Rozmiar2: " + partSize)
   for (let i = 0; i < parts.length; i++) {
     const start = i * partSize;
     const end = Math.min(start + partSize, file.size);
     const part = file.slice(start, end);
 
-    const partResponse = await axios.put(parts[i].url, part, {
+    const partResponse = axios.put(parts[i].url, part, {
       headers: {
         "Content-Type": file.type,
       },
@@ -295,10 +296,10 @@ if (partSize < MIN_PART_SIZE) {
     promises.push(partResponse);
   }
 
-  // Czekamy na zakończenie wszystkich części uploadu
   await Promise.all(promises);
   finishMultipartUpload(uploadId, file.name, parts);
 };
+
 
 const finishMultipartUpload = async (uploadId, fileName, parts) => {
   const token = getAccessToken();
@@ -319,6 +320,7 @@ const finishMultipartUpload = async (uploadId, fileName, parts) => {
     });
 
     console.log('File upload completed successfully:', response.data);
+    uploadProgress.value=0
   } catch (err) {
     console.error('Error completing upload:', err);
   }
@@ -447,6 +449,9 @@ const calculateSize = (size) => {
             <font-awesome-icon icon="fa-solid fa-arrow-up-from-bracket" /> Prześlij plik
           </BButton>
         </div>
+        <div v-if="uploadProgress > 0" class="mt-3" style="width: 400px;">
+          <BProgress :value="uploadProgress" :max="100" show-progress :precision="2"></BProgress>
+        </div>
         <div class="d-flex flex-row align-items-center mt-3">
           <BButton @click="getFiles(user.username)" variant="success" class="mt-4" size="lg">
             <font-awesome-icon icon="fa-solid fa-list" /> {{ showFiles ? "Ukryj pliki" : "Wyświetl pliki"}}
@@ -455,7 +460,6 @@ const calculateSize = (size) => {
             <font-awesome-icon icon="fa-solid fa-list" /> {{ showProcessing ? "Ukryj przetwarzane pliki" : "Wyświetl przetwarzane pliki"}}
           </BButton>
         </div>
-
       </div>
       <BRow v-if="showFiles" class="mt-3">
         <BCol lg="4" class="my-1">
