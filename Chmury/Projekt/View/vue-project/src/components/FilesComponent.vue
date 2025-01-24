@@ -11,9 +11,12 @@ const file = ref(null)
 const filter = ref('')
 const selectedFilter = ref('')
 const fileList = ref([]);
+const tickets = ref([]);
 const API_URL = `https://cjaomdnus8.execute-api.eu-north-1.amazonaws.com/dev/files/`;
 const toast = useToast();
 const showFiles = ref(false)
+const showProcessing = ref(false);
+const loading = ref(false);
 
 const MIN_PART_SIZE = 5242880;
 
@@ -30,6 +33,12 @@ const fields = [
   { key: "size", label: "Size",  class: 'text-center' },
   { key: "actions", label: "Download",  class: 'text-center' },
   { key: "actions2", label: "See versions", class: "text-center"}
+]
+
+const fields2 = [
+  { key: "filename", label: "File Name",  class: 'text-center' },
+  { key: "ticketId", label: "Ticked ID",  class: 'text-center' },
+  { key: "status", label: "Status",  class: 'text-center' },
 ]
 
 const filters = [
@@ -55,11 +64,98 @@ const getAccessToken = () => {
   return null;
 };
 
+function getTicketsByTicketId() {
+
+  const tickets = [];
+  const TicketId = 'TicketId'
+
+  // Iterujemy przez wszystkie elementy w localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i); // Pobieramy nazwę klucza
+    if (key && key.includes(TicketId)) { // Sprawdzamy, czy nazwa klucza zawiera TicketId
+      const item = localStorage.getItem(key); // Pobieramy wartość z localStorage
+      //console.log(item);
+      try {
+        const temp = [];
+        // Parsujemy dane
+        //const parsedItem = JSON.parse(item);
+
+        // Wyciąganie nazwy pliku z klucza (po "_" i bez liczby na końcu)
+        const fileNameWithExtension = key.split('TicketId')[1]; // Zakładamy, że nazwa pliku jest po "_"
+        const fileName = fileNameWithExtension.replace(/_?\d+$/, ''); // Usuwamy ewentualną liczbę na końcu
+        // console.log(fileName);
+        // console.log(fileNameWithExtension);
+
+        // Dodajemy nazwę pliku do obiektu
+        //parsedItem.fileName = fileName;
+
+        //tickets.push(item); // Dodajemy do tablicy tickets
+        temp.push(item);
+        temp.push(fileName);
+        tickets.push(temp);
+      } catch (e) {
+        console.error('Błąd parsowania elementu:', key);
+      }
+    }
+
+  }
+
+  // console.log(tickets);
+  return tickets;
+}
+
+
+
+const getProcessingFile = async () => {
+  loading.value = true;
+  if(showFiles.value){
+    showFiles.value = false;
+  }
+  if (showProcessing.value === false) {
+    tickets.value = getTicketsByTicketId();
+    for (let ticket of tickets.value) {
+      try {
+        // Wysyłanie pliku jako surowych danych (Blob/File)
+        console.log(ticket);
+        const response = await axios.get(`${API_URL}ticketStatus/${ticket[0]}`);
+        //console.log('Status read successfully:', response.data);
+        ticket[2] = response.data.status;
+        //toast.success('File uploaded successfully!')
+      } catch (err) {
+        console.error('Error uploading file:', err);
+        if (err.response) {
+          console.error('Response error:', err.response.data);
+        }
+      }
+    }
+    console.log(tickets.value);
+  }
+  loading.value = false;
+  showProcessing.value = !showProcessing.value;
+}
+
 // Funkcja obsługująca zmianę pliku
 const handleFileChange = (event) => {
   file.value = event.target.files[0]; // Przypisujemy wybrany plik do file.value
 };
 
+function saveItemWithUniqueName(key, value) {
+  let uniqueKey = key;
+  let counter = 1;
+
+  // Sprawdzanie, czy klucz już istnieje
+  while (localStorage.getItem(uniqueKey) !== null) {
+    uniqueKey = `${key}_${counter}`;
+    counter++;
+  }
+
+  // Zapisanie wartości pod unikalnym kluczem
+  localStorage.setItem(uniqueKey, value);
+  console.log(`Dane zapisane pod kluczem: ${uniqueKey}`);
+}
+
+
+// Funkcja przesyłająca plik
 const uploadFile = async (username) => {
   if (!file.value) {
     console.error('No file selected');
@@ -98,7 +194,9 @@ const uploadFile = async (username) => {
           Authorization: `${token}`,
         },
       });
-
+      if (response.data.ticketId !== undefined) {
+        saveItemWithUniqueName(`TicketId${fileName}`, response.data.ticketId);
+      }
       console.log('File uploaded successfully:', response.data);
       toast.success('File uploaded successfully!')
     } catch (err) {
@@ -219,6 +317,12 @@ const finishMultipartUpload = async (uploadId, fileName, parts) => {
 
 const getFiles = async (username) => {
   showFiles.value = !showFiles.value;
+  if(showProcessing.value){
+    showProcessing.value = false;
+  }
+  if (fileList.value.length === 0) {
+    loading.value = true;
+  }
   console.log(showFiles.value)
   const token = getAccessToken();
   if (!token) {
@@ -233,8 +337,10 @@ const getFiles = async (username) => {
         Authorization: `${token}`,
       },
     });
+    loading.value = false;
     console.log("Przesłane dane!!!!")
     console.log(response);
+
     fileList.value = response.data.files; // Zapisanie listy plików
     console.log('Files:', fileList.value);
   } catch (error) {
@@ -326,14 +432,21 @@ const calculateSize = (size) => {
     <BContainer>
       <div class="d-flex flex-column justify-content-center align-items-center">
         <h1>Prześlij plik przez API</h1>
-        <BFormFile v-model="file" @change="handleFileChange" style="width: 400px;"/>
-        <!-- <input type="file" @change="handleFileChange" /> -->
-        <BButton @click="uploadFile(user.username)" variant="primary" class="mt-3" size="lg">
-            <font-awesome-icon icon="fa-solid fa-arrow-up-from-bracket"/> Prześlij plik
-        </BButton>
-        <BButton @click="getFiles(user.username)" variant="success" class="mt-2" size="lg">
+        <div class="d-flex flex-row align-items-center mt-3">
+          <BFormFile v-model="file" @change="handleFileChange" style="width: 400px;" size="lg"/>
+          <BButton @click="uploadFile(user.username)" variant="primary" class="ml-3" size="lg" style="margin-left: 12px;">
+            <font-awesome-icon icon="fa-solid fa-arrow-up-from-bracket" /> Prześlij plik
+          </BButton>
+        </div>
+        <div class="d-flex flex-row align-items-center mt-3">
+          <BButton @click="getFiles(user.username)" variant="success" class="mt-4" size="lg">
             <font-awesome-icon icon="fa-solid fa-list" /> {{ showFiles ? "Ukryj pliki" : "Wyświetl pliki"}}
-        </BButton>
+          </BButton>
+          <BButton @click="getProcessingFile()" variant="success" class="mt-4" size="lg" style="margin-left: 12px;">
+            <font-awesome-icon icon="fa-solid fa-list" /> {{ showProcessing ? "Ukryj przetwarzane pliki" : "Wyświetl przetwarzane pliki"}}
+          </BButton>
+        </div>
+
       </div>
       <BRow v-if="showFiles" class="mt-3">
         <BCol lg="4" class="my-1">
@@ -395,6 +508,23 @@ const calculateSize = (size) => {
             </BCard>
         </template>
       </BTable>
+      <BTable v-if="showProcessing" :items="tickets" :fields="fields2" striped hover class="mt-3">
+        <template #cell(filename)="data">
+          {{ data.item[1] }}
+        </template>
+        <template #cell(ticketId)="data">
+          {{ data.item[0] }}
+        </template>
+        <template #cell(status)="data">
+          {{ data.item[2] }}
+        </template>
+      </BTable>
+      <BRow v-if="loading && (showFiles || !showProcessing)" style="margin-top: 24px;">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="spinner-border" role="status" aria-hidden="true" style="margin-right: 8px;"></div>
+          <strong>Loading...</strong>
+        </div>
+      </BRow>
     </BContainer>
   </template>
   
